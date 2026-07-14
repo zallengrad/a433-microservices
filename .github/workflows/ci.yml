@@ -1,0 +1,29 @@
+name: CI Frontend Karsa Jobs
+
+on:
+  push:
+    branches:
+      - karsajobs-ui
+
+jobs:
+  lint-dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Run Hadolint
+        run: docker run --rm -i hadolint/hadolint < Dockerfile
+
+  build-app-karsajobs-ui:
+    needs: [lint-dockerfile]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Login to GHCR
+        run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u zallengrad --password-stdin
+      - name: Build and Push Image
+        run: |
+          IMAGE_NAME="ghcr.io/zallengrad/karsajobs-ui:latest"
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
